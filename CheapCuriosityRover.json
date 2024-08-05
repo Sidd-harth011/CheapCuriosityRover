@@ -1,0 +1,258 @@
+{
+    "project": "cheap curiosity rover",
+    "defines": {
+      "FORWARD": "F",
+      "BACKWARD": "B",
+      "START": "A",
+      "PAUSE": "P"
+    },
+    "constants": {
+      "ultraSonicTrig2": "A1",
+      "ultraSonicEcho2": "A0",
+      "ultraSonicVcc": 4,
+      "ultraSonicTrig": 3,
+      "ultraSonicEcho": 2,
+      "buzzPin": 5,
+      "redLEDpin1": "A5",
+      "redLEDpin2": 6,
+      "greenLEDpin": 7,
+      "blueLEDpin": 12,
+      "motor1Pin1": 8,
+      "motor1Pin2": 9,
+      "motor2Pin1": 10,
+      "motor2Pin2": 11,
+      "motorOnOffPin": 13,
+      "ldrPin": "A3"
+    },
+    "variables": {
+      "duration": 0,
+      "distance": 0,
+      "distance2": 0,
+      "duration2": 0,
+      "ldrVal": 0
+    },
+    "functions": {
+      "setup": {
+        "instructions": [
+          "pinMode(ldrPin, INPUT)",
+          "pinMode(motor1Pin1, OUTPUT)",
+          "pinMode(motor1Pin2, OUTPUT)",
+          "pinMode(motor2Pin1, OUTPUT)",
+          "pinMode(motor2Pin2, OUTPUT)",
+          "pinMode(motorOnOffPin, OUTPUT)",
+          "pinMode(ultraSonicTrig, OUTPUT)",
+          "pinMode(ultraSonicEcho, INPUT)",
+          "pinMode(ultraSonicTrig2, OUTPUT)",
+          "pinMode(ultraSonicEcho2, INPUT)",
+          "pinMode(buzzPin, OUTPUT)",
+          "pinMode(redLEDpin1, OUTPUT)",
+          "pinMode(redLEDpin2, OUTPUT)",
+          "pinMode(greenLEDpin, OUTPUT)",
+          "pinMode(blueLEDpin, OUTPUT)",
+          "pinMode(ultraSonicVcc, OUTPUT)",
+          "digitalWrite(ultraSonicVcc, HIGH)",
+          "Serial.begin(9600)"
+        ]
+      },
+      "loop": {
+        "instructions": [
+          "ldrVal = analogRead(ldrPin)",
+          "Serial.println(ldrVal)",
+          "distance = measureDistance(ultraSonicTrig, ultraSonicEcho)",
+          "distance2 = measureDistance(ultraSonicTrig2, ultraSonicEcho2)",
+          "Serial.println(distance)",
+          "Serial.println(distance2)",
+          {
+            "while": "Serial.available() == 0",
+            "do": []
+          },
+          "char command = Serial.read()",
+          {
+            "switch": "command",
+            "cases": {
+              "START": "startRover()",
+              "PAUSE": "pauseRover()",
+              "FORWARD": "moveForward()",
+              "BACKWARD": "moveBackward()",
+              "default": ""
+            }
+          }
+        ]
+      },
+      "measureDistance": {
+        "parameters": ["int trigPin", "int echoPin"],
+        "instructions": [
+          "digitalWrite(trigPin, HIGH)",
+          "delayMicroseconds(20)",
+          "digitalWrite(trigPin, LOW)",
+          "int duration = pulseIn(echoPin, HIGH)",
+          "return 0.017 * duration"
+        ]
+      },
+      "startRover": {
+        "instructions": [
+          "digitalWrite(motorOnOffPin, HIGH)",
+          "controlLEDsAndBuzzer()",
+          "stopMotors()"
+        ]
+      },
+      "pauseRover": {
+        "instructions": [
+          "digitalWrite(motorOnOffPin, LOW)",
+          "digitalWrite(buzzPin, LOW)",
+          "digitalWrite(redLEDpin1, LOW)",
+          "digitalWrite(redLEDpin2, LOW)",
+          "digitalWrite(greenLEDpin, LOW)",
+          "digitalWrite(blueLEDpin, LOW)",
+          "stopMotors()"
+        ]
+      },
+      "moveForward": {
+        "instructions": [
+          "digitalWrite(motorOnOffPin, HIGH)",
+          {
+            "if": "distance <= 40 && ldrVal < 2",
+            "then": [
+              "stopMotors()",
+              "activateBuzzerAndLEDs()"
+            ]
+          },
+          {
+            "else if": "distance >= 40 && ldrVal > 2",
+            "then": [
+              "moveMotorsForward()",
+              "deactivateBuzzerAndLEDs()"
+            ]
+          },
+          {
+            "else if": "distance <= 40 && ldrVal > 2",
+            "then": [
+              "stopMotors()",
+              "activateBuzzerAndDeactivateLEDs()"
+            ]
+          },
+          {
+            "else if": "distance >= 40 && ldrVal < 2",
+            "then": [
+              "moveMotorsForward()",
+              "deactivateBuzzerAndActivateLEDs()"
+            ]
+          }
+        ]
+      },
+      "moveBackward": {
+        "instructions": [
+          "digitalWrite(motorOnOffPin, HIGH)",
+          {
+            "if": "distance2 <= 40 && ldrVal < 2",
+            "then": [
+              "stopMotors()",
+              "activateBuzzerAndLEDs()"
+            ]
+          },
+          {
+            "else if": "distance2 >= 40 && ldrVal > 2",
+            "then": [
+              "moveMotorsBackward()",
+              "deactivateBuzzerAndLEDs()"
+            ]
+          },
+          {
+            "else if": "distance2 <= 40 && ldrVal > 2",
+            "then": [
+              "stopMotors()",
+              "activateBuzzerAndDeactivateLEDs()"
+            ]
+          },
+          {
+            "else if": "distance2 >= 40 && ldrVal < 2",
+            "then": [
+              "moveMotorsBackward()",
+              "deactivateBuzzerAndActivateLEDs()"
+            ]
+          }
+        ]
+      },
+      "stopMotors": {
+        "instructions": [
+          "digitalWrite(motor1Pin1, LOW)",
+          "digitalWrite(motor1Pin2, LOW)",
+          "digitalWrite(motor2Pin1, LOW)",
+          "digitalWrite(motor2Pin2, LOW)"
+        ]
+      },
+      "moveMotorsForward": {
+        "instructions": [
+          "digitalWrite(motor1Pin1, HIGH)",
+          "digitalWrite(motor1Pin2, LOW)",
+          "digitalWrite(motor2Pin1, LOW)",
+          "digitalWrite(motor2Pin2, HIGH)"
+        ]
+      },
+      "moveMotorsBackward": {
+        "instructions": [
+          "digitalWrite(motor1Pin1, LOW)",
+          "digitalWrite(motor1Pin2, HIGH)",
+          "digitalWrite(motor2Pin1, HIGH)",
+          "digitalWrite(motor2Pin2, LOW)"
+        ]
+      },
+      "activateBuzzerAndLEDs": {
+        "instructions": [
+          "digitalWrite(buzzPin, HIGH)",
+          "digitalWrite(redLEDpin1, LOW)",
+          "digitalWrite(redLEDpin2, LOW)",
+          "digitalWrite(greenLEDpin, HIGH)",
+          "digitalWrite(blueLEDpin, HIGH)"
+        ]
+      },
+      "deactivateBuzzerAndLEDs": {
+        "instructions": [
+          "digitalWrite(buzzPin, LOW)",
+          "digitalWrite(redLEDpin1, LOW)",
+          "digitalWrite(redLEDpin2, LOW)",
+          "digitalWrite(greenLEDpin, LOW)",
+          "digitalWrite(blueLEDpin, LOW)"
+        ]
+      },
+      "deactivateBuzzerAndActivateLEDs": {
+        "instructions": [
+          "digitalWrite(buzzPin, LOW)",
+          "digitalWrite(redLEDpin1, LOW)",
+          "digitalWrite(redLEDpin2, LOW)",
+          "digitalWrite(greenLEDpin, HIGH)",
+          "digitalWrite(blueLEDpin, HIGH)"
+        ]
+      },
+      "activateBuzzerAndDeactivateLEDs": {
+        "instructions": [
+          "digitalWrite(buzzPin, HIGH)",
+          "digitalWrite(redLEDpin1, LOW)",
+          "digitalWrite(redLEDpin2, LOW)",
+          "digitalWrite(greenLEDpin, LOW)",
+          "digitalWrite(blueLEDpin, LOW)"
+        ]
+      },
+      "controlLEDsAndBuzzer": {
+        "instructions": [
+          {
+            "if": "ldrVal < 2 && distance <= 40",
+            "then": "activateBuzzerAndLEDs()"
+          },
+          {
+            "else if": "ldrVal > 2 && distance > 40",
+            "then": "deactivateBuzzerAndLEDs()"
+          },
+          {
+            "else if": "ldrVal < 2 && distance > 40",
+            "then": "deactivateBuzzerAndActivateLEDs()"
+          },
+          {
+            "else if": "ldrVal > 2 && distance <= 40",
+            "then": "activateBuzzerAndDeactivateLEDs()"
+          }
+        ]
+      }
+    }
+  }
+  
